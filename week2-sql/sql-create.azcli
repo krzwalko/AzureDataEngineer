@@ -1,0 +1,53 @@
+#
+# Creation of SQL servers, database and failover group, testing failover and connection endpoints
+#
+# prerequisite: tsql is from FreeTDS installation (conda install freetds)
+# default resource group is set in AZ CLI (az configure -d group=resourcegroup)
+
+# Get credentials from external file, format below:
+# USERNAME=username
+# PASSWORD=password
+source .credentials
+
+# Create two SQL servers in different regions
+az sql server create -n krzwalko-sql3 -l northeurope -u $USERNAME -p $PASSWORD
+az sql server create -n krzwalko-sql4 -l westeurope -u $USERNAME -p $PASSWORD
+
+# Show created servers
+az sql server show -n krzwalko-sql3 -ojson
+az sql server show -n krzwalko-sql4 -ojson
+
+# Create database in first sql server
+az sql db create -s krzwalko-sql3 -n krzwalko-db1 --service-objective Basic
+
+# Show created database
+az sql db show -s krzwalko-sql3 -n krzwalko-db1 -ojson
+
+# Create failover group
+az sql failover-group create -s krzwalko-sql3 --partner-server krzwalko-sql4 -n krzwalko-fg34 --add-db krzwalko-db1
+
+# Show created failover group asking both servers
+az sql failover-group list -s krzwalko-sql3 -ojson
+az sql failover-group list -s krzwalko-sql4 -ojson
+
+# Add my ip to SQL firewall
+MYIP=$(curl -s ifconfig.me)
+az sql server firewall-rule create -s krzwalko-sql3 -n allow_home --start-ip-address $MYIP --end-ip-address $MYIP
+az sql server firewall-rule create -s krzwalko-sql4 -n allow_home --start-ip-address $MYIP --end-ip-address $MYIP
+
+tsql -S krzwalko-fg34.database.windows.net -U $USERNAME -P $PASSWORD < sql-create-queries.sql
+
+# Perform failover between servers
+az sql failover-group set-primary -s krzwalko-sql4 -n krzwalko-fg34 
+
+# Check connection to individual servers
+tsql -S krzwalko-sql3.database.windows.net -U $USERNAME -P $PASSWORD < sql-create-queries.sql
+tsql -S krzwalko-sql4.database.windows.net -U $USERNAME -P $PASSWORD < sql-create-queries.sql
+
+# Check connections to primary and secondary
+tsql -S krzwalko-fg34.database.windows.net -U $USERNAME -P $PASSWORD < sql-create-queries.sql
+tsql -S krzwalko-fg34.secondary.database.windows.net -U $USERNAME -P $PASSWORD < sql-create-queries.sql
+
+# Teardown both servers
+az sql server delete -n krzwalko-sql3 -y
+az sql server delete -n krzwalko-sql4 -y
