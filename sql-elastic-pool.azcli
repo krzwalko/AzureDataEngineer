@@ -1,0 +1,54 @@
+#
+# Creation of SQL servers with elastic pools and managing databases
+#
+# default resource group is set in AZ CLI (az configure -d group=resourcegroup)
+
+# Get credentials from external file, format below:
+# USERNAME=username
+# PASSWORD=password
+source .credentials
+
+# define variables
+LOCATION=northeurope
+SERVERNAME=krzwalko-sql3
+POOLNAME=krzwalko-pool1
+DBNAME1=krzwalko-db1
+DBNAME2=krzwalko-db2
+
+# Create SQL server
+az sql server create -n $SERVERNAME -l $LOCATION -u $USERNAME -p $PASSWORD
+
+# Show created servers
+az sql server show -n $SERVERNAME -ojson
+
+# Show available pool editions
+az sql elastic-pool list-editions -l $LOCATION
+
+# Create an elastic pool
+az sql elastic-pool create -s $SERVERNAME -n $POOLNAME -e Basic -c 50
+
+# Show details about a pool
+az sql elastic-pool show -s $SERVERNAME -n $POOLNAME -ojson
+
+# Create one database in the elastic pool
+az sql db create -s $SERVERNAME --elastic-pool $POOLNAME -n $DBNAME1
+
+# Create database outside of a pool
+az sql db create -s $SERVERNAME -n $DBNAME2 --service-objective Basic
+
+# Add database to the pool
+az sql db update -s $SERVERNAME -n $DBNAME2 --elastic-pool $POOLNAME
+
+# List databases in the pool
+az sql elastic-pool list-dbs -s $SERVERNAME -n $POOLNAME -ojson
+
+
+# Tear down - delete databases
+az sql db delete -s $SERVERNAME -n $DBNAME1 -y
+az sql db delete -s $SERVERNAME -n $DBNAME2 -y
+
+# Tear down - delete Elastic pool
+az sql elastic-pool delete -s $SERVERNAME -n $POOLNAME
+
+# Tear down - delete SQL Server
+az sql server delete -n $SERVERNAME -y
