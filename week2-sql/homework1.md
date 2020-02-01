@@ -2,7 +2,7 @@
 
 Below is the architecure diagram for an web application hosted in Azure with a requirement that is should use any relational database (with minimum two read-replicas) 
 
-![homework](homework.png)
+![homework1](homework1.png)
 
 Key decisions taken and explanation:
 - Selected database servide is Azure SQL. This service is very flexible when it comes to scaling, so in the beginning it can use very simple DTU model and scale up depending on traffic. After observing some key metrics available in Azure Monitor, depending on application traffic, it can scale up in the same model or switch to serverless or to vCore model with dedicated resources. This change can be performed almost online, without dataloss or need to perform data migration.
