@@ -1,0 +1,42 @@
+# Get credentials from external file, format below:
+# USERNAME=username
+# PASSWORD=password
+source .credentials
+
+# Create two SQL servers (primary and secondary)
+az sql server create -n krzwalko-sql1 -l westeurope -u $USERNAME -p $PASSWORD
+az sql server create -n krzwalko-sql2 -l northeurope -u $USERNAME -p $PASSWORD
+
+# Add my IP to SQL server firewall
+MYIP=$(curl -s ifconfig.me)
+az sql server firewall-rule create -s krzwalko-sql1 -n allow_home --start-ip-address $MYIP --end-ip-address $MYIP
+az sql server firewall-rule create -s krzwalko-sql2 -n allow_home --start-ip-address $MYIP --end-ip-address $MYIP
+
+# Create database on primary (use sample - AdventureWorksLT)
+az sql db create -s krzwalko-sql1 -n krzwalko-db1 --service-objective Basic --sample-name AdventureWorksLT
+
+# Create replica on secondary server
+az sql db replica create -s krzwalko-sql1 -n krzwalko-db1 --partner-server krzwalko-sql2
+
+# Show replication
+az sql db replica list-links -s krzwalko-sql1 -n krzwalko-db1 -ojson
+
+# Configure automatic tuning - CREATE_INDEX
+tsql -S krzwalko-sql1.database.windows.net -D krzwalko-db1 -U $USERNAME -P $PASSWORD < homework2-tuning-create-index.sql
+
+# Check automatic tuning options
+tsql -S krzwalko-sql1.database.windows.net -D krzwalko-db1 -U $USERNAME -P $PASSWORD < homework2-tuning-check.sql
+
+# Create datamask
+tsql -S krzwalko-sql1.database.windows.net -D krzwalko-db1 -U $USERNAME -P $PASSWORD < homework2-create-datamask.sql
+
+# Create user
+tsql -S krzwalko-sql1.database.windows.net -D krzwalko-db1 -U $USERNAME -P $PASSWORD < homework2-create-user.sql
+
+# Select masked data as nonprivileged user
+tsql -S krzwalko-sql1.database.windows.net -D krzwalko-db1 -U test -P 'SuperCloud!' < homework2-select.sql
+
+
+# Tear down primary and secondary SQL server
+az sql server delete -n krzwalko-sql1 -y
+az sql server delete -n krzwalko-sql2 -y
