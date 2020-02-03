@@ -1,0 +1,28 @@
+$ $GREMLIN_PATH/bin/gremlin.sh
+
+         \,,,/
+         (o o)
+-----oOOo-(3)-oOOo-----
+plugin activated: tinkerpop.server
+plugin activated: tinkerpop.utilities
+plugin activated: tinkerpop.tinkergraph
+gremlin> :remote connect tinkerpop.server /Users/krzwalko/Dev/AzureDataEngineer/week3-nosql/remote.yaml
+==>Configured krzwalko-cosmos2.gremlin.cosmosdb.azure.com/52.169.219.183:443
+gremlin> :remote console
+==>All scripts will now be sent to Gremlin Server - [krzwalko-cosmos2.gremlin.cosmosdb.azure.com/52.169.219.183:443] - type ':remote console' to return to local mode
+gremlin> g.V().hasLabel('movie').has('brand', 'DC')
+==>[id:16bb4984-ccf2-4511-a872-f5f83f55b748,label:movie,type:vertex,properties:[name:[[id:16bb4984-ccf2-4511-a872-f5f83f55b748|name,value:Batman]],brand:[[id:520a3934-3d1c-433e-b795-5682270157c4,value:DC]]]]
+==>[id:cae51cb7-867c-41a1-9e50-d7109edda394,label:movie,type:vertex,properties:[name:[[id:cae51cb7-867c-41a1-9e50-d7109edda394|name,value:Batman2]],brand:[[id:f53db95a-60a6-4060-84ea-8363615aaf73,value:DC]]]]
+==>[id:3a8e52e8-dae8-4b73-95a1-c96ba6673d5b,label:movie,type:vertex,properties:[name:[[id:3a8e52e8-dae8-4b73-95a1-c96ba6673d5b|name,value:Superman]],brand:[[id:2238f5a0-9811-47ff-b145-ba9e714e5be8,value:DC]]]]
+==>[id:54f4cf1b-7ada-41b6-bd7a-05a176e647a8,label:movie,type:vertex,properties:[name:[[id:54f4cf1b-7ada-41b6-bd7a-05a176e647a8|name,value:BatmanVSSuperman]],brand:[[id:6e02174f-82b4-43b0-81e4-4c8606f7339b,value:DC]]]]
+gremlin> g.V().hasLabel('movie').has('brand', 'DC').values('name')
+==>Batman
+==>Batman2
+==>Superman
+==>BatmanVSSuperman
+gremlin> g.V().hasLabel('movie').has('name', 'Batman').outE('watches').inV()
+==>[id:10e16d04-18b4-4f10-903f-a0879175b954,label:movie,type:vertex,properties:[name:[[id:10e16d04-18b4-4f10-903f-a0879175b954|name,value:Avengers]],brand:[[id:cf511394-e23f-4fa9-bf71-6f92279d8361,value:Marvel]]]]
+==>[id:54f4cf1b-7ada-41b6-bd7a-05a176e647a8,label:movie,type:vertex,properties:[name:[[id:54f4cf1b-7ada-41b6-bd7a-05a176e647a8|name,value:BatmanVSSuperman]],brand:[[id:6e02174f-82b4-43b0-81e4-4c8606f7339b,value:DC]]]]
+==>[id:cae51cb7-867c-41a1-9e50-d7109edda394,label:movie,type:vertex,properties:[name:[[id:cae51cb7-867c-41a1-9e50-d7109edda394|name,value:Batman2]],brand:[[id:f53db95a-60a6-4060-84ea-8363615aaf73,value:DC]]]]
+gremlin> g.V().hasLabel('movie').has('name', 'Batman').outE('watches').order().by("weight", decr).limit(1).inV()
+==>[id:cae51cb7-867c-41a1-9e50-d7109edda394,label:movie,type:vertex,properties:[name:[[id:cae51cb7-867c-41a1-9e50-d7109edda394|name,value:Batman2]],brand:[[id:f53db95a-60a6-4060-84ea-8363615aaf73,value:DC]]]]
