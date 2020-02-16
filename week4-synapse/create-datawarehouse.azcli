@@ -1,0 +1,19 @@
+# Get credentials from external file, format below:
+# USERNAME=username
+# PASSWORD=password
+source .credentials
+
+# Create SQL server
+az sql server create -n krzwalko-sql -l westeurope -u $USERNAME -p $PASSWORD
+
+# Create SQL DW (Synapse Analytics)
+az sql dw create --name krzwalko-sa --server krzwalko-sql --service-objective DW400c
+
+# Set server firewall
+MYIP=$(curl -s ifconfig.me)
+az sql server firewall-rule create -s krzwalko-sql -n allow_home --start-ip-address $MYIP --end-ip-address $MYIP
+
+# Tear down
+az sql dw delete --name krzwalko-sa --server krzwalko-sql -y
+az sql server delete --name krzwalko-sql
+
