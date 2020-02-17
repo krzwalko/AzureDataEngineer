@@ -13,6 +13,14 @@ az sql dw create --name krzwalko-sa --server krzwalko-sql --service-objective DW
 MYIP=$(curl -s ifconfig.me)
 az sql server firewall-rule create -s krzwalko-sql -n allow_home --start-ip-address $MYIP --end-ip-address $MYIP
 
+az sql dw show --server krzwalko-sql --name krzwalko-sa -ojson
+
+# Pause data warehouse
+az sql dw pause --server krzwalko-sql --name krzwalko-sa
+
+# Resume data warehouse
+az sql dw resume --server krzwalko-sql --name krzwalko-sa
+
 # Tear down
 az sql dw delete --name krzwalko-sa --server krzwalko-sql -y
 az sql server delete --name krzwalko-sql
